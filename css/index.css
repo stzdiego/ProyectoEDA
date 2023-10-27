@@ -1,0 +1,10 @@
+body {
+    margin-top: 1rem;
+}
+
+.title{
+    text-align: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: chocolate;
+}
