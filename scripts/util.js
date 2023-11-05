@@ -1,39 +1,97 @@
 const { Score } = require("../class/Score.js");
 
+function validateData(data) {
+    let dataPlayers = [];
+    let playerNames = [];
+    let dataSpots = [];
+    let spots = [];
+    let message = '';
+
+    //Calculo el numero de datos de jugadores
+    dataPlayers = data.replace(/\'/g, "").split("||");
+
+    //Calculo el numero de datos de nombres y spots
+    for (let n = 0; n < dataPlayers.length; n++) {
+        playerNames.push(dataPlayers[n].split("*")[0]);
+        dataSpots.push(dataPlayers[n].split("*")[1]);
+    }
+
+    //Elimino los espacios en blanco de los spots
+    for (let p = 0; p < dataSpots.length; p++) {
+        dataSpots[p] = dataSpots[p].replace(/\s/g, "");
+    }
+
+    //Valido que el numero de datos de nombres y spots sea el mismo
+    if (playerNames.length != dataSpots.length) {
+        message = "Error en el numero de datos de nombres y spots";
+        return message;
+    }
+
+    //Valido que el numero de datos de spots sea el mismo para todos los jugadores
+    for (let p = 1; p < playerNames.length; p++) {
+        spots = dataSpots[p].split(";");
+        
+        if (spots.length != dataSpots[0].split(";").length) {
+            message = "Error en el numero de datos de spots en el jugador " + playerNames[p];
+            return message;
+        }
+
+        //Valido que el numero de shots sea el mismo para todos los spots
+        for (let m = 1; m < spots.length; m++) {
+            if (spots[m].length != spots[0].length) {
+                message = "Error en el numero de datos de shots en el spot " + spots[m] + " del jugador " + playerNames[p];
+                return message;
+            }
+        }
+
+        //Valido que los shots sean numeros
+        for (let i = 0; i < spots.length; i++) {
+            for (let j = 0; j < spots[i].length; j++) {
+                if (isNaN(spots[i][j])) {
+                    message = "Error en el dato " + spots[i][j] + " del spot " + spots[i] + " del jugador " + playerNames[p];
+                    return message;
+                }
+            }
+        }
+    }
+
+    return message;
+}
+
 function resolverConcurso(concurso) {
-    let dataPlayers = concurso.split("||");
+    let dataPlayers = concurso.replace(/\'/g, "").split("||");
     let scores = [];
     let result = "";
 
-    for (let i = 0; i < dataPlayers.length; i++) {
-        let dataPlayer = dataPlayers[i].split("*");
-        let name = dataPlayer[0];
+    for (let n = 0; n < dataPlayers.length; n++) {
+        let dataPlayer = dataPlayers[n].split("*");
+        let playerNames = dataPlayer[0];
         let spots = dataPlayer[1].split(";");
 
         let totalPoints = 0;
         let firstSpotPoints = 0;
         let totalLastShotSpot = 0;
 
-        for (let j = 0; j < spots.length; j++) {
-            let shots = spots[j];
+        for (let p = 0; p < spots.length; p++) {
+            let shots = spots[p].replace(/\s/g, "");
 
-            for (let k = 0; k < shots.length; k++) {
-                totalPoints += parseInt(shots[k]);
+            for (let m = 0; m < shots.length; m++) {
+                totalPoints += parseInt(shots[m]);
 
-                if (k == shots.length - 1) {
-                    totalLastShotSpot += parseInt(shots[k]);
+                if (m == shots.length - 1) {
+                    totalLastShotSpot += parseInt(shots[m]);
                 }
             }
 
-            if (j == 0) {
+            if (p == 0) {
                 firstSpotPoints = totalPoints;
             }
         }
 
-        scores.push(new Score(name, totalPoints, firstSpotPoints, totalLastShotSpot));
+        scores.push(new Score(playerNames, totalPoints, firstSpotPoints, totalLastShotSpot));
     }
 
-    bubbleSortScoresDesc(scores);
+    bubbleSortScoresAsc(scores);
     scores.forEach(score => {
         if(result === "") {
             result += score.toString();
@@ -46,12 +104,12 @@ function resolverConcurso(concurso) {
     return result;
 }
 
-function bubbleSortScoresDesc(scores) {
+function bubbleSortScoresAsc(scores) {
     let n = scores.length;
 
     for (let i = 0; i < n - 1; i++) {
         for (let j = 0; j < n - i - 1; j++) {
-            if (scores[j].compare(scores[j + 1]) < 0) {
+            if (scores[j].compare(scores[j + 1]) > 0) {
                 let temp = scores[j];
                 scores[j] = scores[j + 1];
                 scores[j + 1] = temp;
@@ -61,9 +119,10 @@ function bubbleSortScoresDesc(scores) {
 }
 
 function calculateInformation(scores) {
-    let dataPlayers = scores.split("||");
-    let spots = dataPlayers[0].split("*")[1].split(";");
+    let dataPlayers = scores.replace(/\'/g, "").split("||");
+    let dataSpots = dataPlayers[0].split("*")[1];
     let playersname = [];
+    let spots = [];
     let results = [];
     
     for (let i = 0; i < dataPlayers.length; i++) {
@@ -72,10 +131,14 @@ function calculateInformation(scores) {
         playersname.push(name);
     }
 
+    for (let i = 0; i < dataSpots.split(";").length; i++) {
+        spots.push(dataSpots.split(";")[i].replace(/\s/g, ""));
+    }
+
     for (let i = 0; i < dataPlayers.length; i++) {
         let dataPlayer = dataPlayers[i].split("*");
         let nameScore = dataPlayer[0];
-        let spotsScore = dataPlayer[1].split(";");
+        let spotsScore = dataPlayer[1].replace(/\s/g, "").split(";");
 
         let totalPoints = 0;
         let firstSpotPoints = 0;
@@ -100,9 +163,9 @@ function calculateInformation(scores) {
         results.push(new Score(nameScore, totalPoints, firstSpotPoints, totalLastShotSpot));
     }
 
-    bubbleSortScoresDesc(results);
+    bubbleSortScoresAsc(results);
 
     return { names: playersname, spots: spots, results: results };
 }
 
-module.exports = { resolverConcurso, calculateInformation };
+module.exports = { validateData, resolverConcurso, calculateInformation };

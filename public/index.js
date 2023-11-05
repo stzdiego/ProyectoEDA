@@ -16,9 +16,11 @@ btnStart.addEventListener('click', startProcess);
 btnReset.addEventListener('click', reset);
 
 //Start Process
-function startProcess() {
+async function startProcess() {
+    const endpointValidations = host + 'validations';
     const endpoint = host + 'calculate';
     const endpoint2 = host + 'calculate2';
+    let validate = '';
 
     const data = {
         data: inputData.value
@@ -32,7 +34,22 @@ function startProcess() {
         body: JSON.stringify(data),
     };
 
-    fetch(endpoint, options)
+    await fetch(endpointValidations, options)
+        .then(res => res.json())
+        .then(res => {
+            validate = res;
+        })
+        .catch(err => {
+            console.error(err);
+            return;
+        });
+    
+    if (validate != '') {
+        alert(validate);
+        return;
+    }
+
+    await fetch(endpoint, options)
         .then(res => res.json())
         .then(res => {
             txtResult.value = res;
@@ -43,7 +60,7 @@ function startProcess() {
             return;
         });
 
-    fetch(endpoint2, options)
+    await fetch(endpoint2, options)
         .then(res => res.json())
         .then(res => {
             createTables(res);
@@ -64,9 +81,9 @@ function createTables(data) {
     txtSpotsCount.value = data.spots.length;
     txtShotsCount.value = data.spots[0].length;
 
-    let tablePlayersHTML = '<table class="table"><tr><th>Name</th></tr>';
-    let tableScoresHTML = '<table class="table"><tr><th>Player';
-    let tableResultsHTML = '<table class="table"><tr><th>#</th><th>Player</th><th>Total Score</th><th>Score First Splot</th><th>Last shot of each splot</th></tr>';
+    let tablePlayersHTML = '<div class="table-responsive"><table class="table"><tr><th>Name</th></tr>';
+    let tableScoresHTML = '<div class="table-responsive"><table class="table"><tr><th>Player';
+    let tableResultsHTML = '<div class="table-responsive"><table class="table"><tr><th>#</th><th>Player</th><th>Total Score</th><th>Score First Splot</th><th>Last shot of each splot</th></tr>';
 
     for (let i = 1; i <= data.spots.length; i++) {
         tableScoresHTML += `<th>Spot ${i}</th>`;
@@ -75,7 +92,7 @@ function createTables(data) {
     for (let i = 0; i < data.names.length; i++) {
         tablePlayersHTML += `<tr><td><input type="text" class="form-control" value="${data.names[i]}"></td></tr>`;
         tableScoresHTML += `<tr><td>${data.names[i]}</td>`;
-        tableResultsHTML += `<tr><td>${i + 1}</td><td>${data.results[i].name}</td><td>${data.results[i].totalPoints}</td><td>${data.results[i].firstSpotPoints}</td><td>${data.results[i].totalLastShotSpots}</td></tr>`;
+        tableResultsHTML += `<tr><td>${data.names.length - i}</td><td>${data.results[i].name}</td><td>${data.results[i].totalPoints}</td><td>${data.results[i].firstSpotPoints}</td><td>${data.results[i].totalLastShotSpots}</td></tr>`;
 
         for (let j = 0; j < data.spots.length; j++) {
             tableScoresHTML += `<td>`;
@@ -87,9 +104,9 @@ function createTables(data) {
         tableScoresHTML += "</tr>";
     }
 
-    tablePlayersHTML += "</table>";
-    tableScoresHTML += "</table>";
-    tableResultsHTML += "</table>";
+    tablePlayersHTML += "</table></div>";
+    tableScoresHTML += "</table></div>";
+    tableResultsHTML += "</table></div>";
     tablePlayers.innerHTML = tablePlayersHTML;
     tableScores.innerHTML = tableScoresHTML;
     tableResults.innerHTML = tableResultsHTML;

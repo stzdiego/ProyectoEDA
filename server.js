@@ -11,6 +11,12 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+app.post('/validations', (req, res) => {
+  const inputData = req.body.data;
+  let result = functions.validateData(inputData);
+  res.json(result);
+});
+
 app.post('/calculate', (req, res) => {
   const inputData = req.body.data;
   let result = functions.resolverConcurso(inputData);
