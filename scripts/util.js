@@ -10,15 +10,51 @@ function validateData(data) {
     //Calculo el numero de datos de jugadores
     dataPlayers = data.replace(/\'/g, "").split("||");
 
+    //Valido el rango de jugadores debe ser 0 < n < 101
+    if (dataPlayers.length < 1 || dataPlayers.length > 100) {
+        message = "Error en el numero de datos de jugadores, el numero de jugadores debe ser mayor a 0 y menor a 101";
+        return message;
+    }
+
     //Calculo el numero de datos de nombres y spots
     for (let n = 0; n < dataPlayers.length; n++) {
         playerNames.push(dataPlayers[n].split("*")[0]);
         dataSpots.push(dataPlayers[n].split("*")[1]);
     }
 
+    //Valido que los nombres no esten vacios, tengan un tamaño maximo de 20 caracteres y no se repitan
+    for (let n = 0; n < playerNames.length; n++) {
+        if (playerNames[n] == "") {
+            message = "Error en el nombre del jugador " + playerNames[n] + ", el nombre no puede estar vacio";
+            return message;
+        }
+        else if (playerNames[n].length > 20) {
+            message = "Error en el nombre del jugador " + playerNames[n] + ", el nombre no puede tener mas de 20 caracteres";
+            return message;
+        }
+        else if (playerNames.indexOf(playerNames[n]) != n) {
+            message = "Error en el nombre del jugador " + playerNames[n] + ", el nombre no puede repetirse";
+            return message;
+        }
+    }
+
     //Elimino los espacios en blanco de los spots
     for (let p = 0; p < dataSpots.length; p++) {
         dataSpots[p] = dataSpots[p].replace(/\s/g, "");
+    }
+
+    //Valido que los spots solo contengan 0 y 1
+    for (let p = 0; p < dataSpots.length; p++) {
+        spots = dataSpots[p].split(";");
+
+        for (let m = 0; m < spots.length; m++) {
+            for (let n = 0; n < spots[m].length; n++) {
+                if (spots[m][n] != 0 && spots[m][n] != 1) {
+                    message = "Error en el dato " + spots[m][n] + " del spot " + spots[m] + " del jugador " + playerNames[p] + ", el dato solo puede ser 0 o 1";
+                    return message;
+                }
+            }
+        }
     }
 
     //Valido que el numero de datos de nombres y spots sea el mismo
@@ -30,7 +66,7 @@ function validateData(data) {
     //Valido que el numero de datos de spots sea el mismo para todos los jugadores
     for (let p = 1; p < playerNames.length; p++) {
         spots = dataSpots[p].split(";");
-        
+
         if (spots.length != dataSpots[0].split(";").length) {
             message = "Error en el numero de datos de spots en el jugador " + playerNames[p];
             return message;
@@ -76,10 +112,12 @@ function resolverConcurso(concurso) {
             let shots = spots[p].replace(/\s/g, "");
 
             for (let m = 0; m < shots.length; m++) {
-                totalPoints += parseInt(shots[m]);
-
                 if (m == shots.length - 1) {
                     totalLastShotSpot += parseInt(shots[m]);
+                    totalPoints += parseInt(shots[m] * 2);
+                }
+                else {
+                    totalPoints += parseInt(shots[m]);
                 }
             }
 
@@ -93,7 +131,7 @@ function resolverConcurso(concurso) {
 
     bubbleSortScoresAsc(scores);
     scores.forEach(score => {
-        if(result === "") {
+        if (result === "") {
             result += score.toString();
         }
         else {
@@ -124,7 +162,7 @@ function calculateInformation(scores) {
     let playersname = [];
     let spots = [];
     let results = [];
-    
+
     for (let i = 0; i < dataPlayers.length; i++) {
         let dataPlayer = dataPlayers[i].split("*");
         let name = dataPlayer[0];
@@ -148,10 +186,13 @@ function calculateInformation(scores) {
             let shots = spotsScore[j];
 
             for (let k = 0; k < shots.length; k++) {
-                totalPoints += parseInt(shots[k]);
 
                 if (k == shots.length - 1) {
                     totalLastShotSpot += parseInt(shots[k]);
+                    totalPoints += parseInt(shots[k] * 2);
+                }
+                else {
+                    totalPoints += parseInt(shots[k]);
                 }
             }
 
